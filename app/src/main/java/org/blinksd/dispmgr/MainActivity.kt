@@ -110,32 +110,39 @@ class MainActivity : AppCompatActivity() {
                     val width = view.findViewById<EditText>(R.id.display_width)
                     val height = view.findViewById<EditText>(R.id.display_height)
 
-                    width.setText(display.width.toString())
-                    height.setText(display.height.toString())
+                    myScope.launch {
+                        val point = Point()
+                        hiddenApi.getService().getInitialDisplaySize(display.displayId, point)
 
-                    AlertDialog.Builder(this@MainActivity).apply {
-                        setView(view)
+                        withMainContext {
+                            width.setText(point.x.toString())
+                            height.setText(point.y.toString())
 
-                        setNeutralButton("()", object : DialogInterface.OnClickListener {
-                            override fun onClick(dialog: DialogInterface?, which: Int) {
-                                myScope.launch {
-                                    hiddenApi.getService().clearForcedDisplaySize(display.displayId)
-                                }
-                            }
-                        })
+                            AlertDialog.Builder(this@MainActivity).apply {
+                                setView(view)
 
-                        setPositiveButton(android.R.string.ok, object : DialogInterface.OnClickListener {
-                            override fun onClick(dialog: DialogInterface?, which: Int) {
-                                myScope.launch {
-                                    hiddenApi.getService().setForcedDisplaySize(
-                                        display.displayId,
-                                        Integer.valueOf(width.text.toString()),
-                                        Integer.valueOf(height.text.toString()),
-                                    )
-                                }
-                            }
-                        })
-                    }.show()
+                                setNeutralButton("()", object : DialogInterface.OnClickListener {
+                                    override fun onClick(dialog: DialogInterface?, which: Int) {
+                                        myScope.launch {
+                                            hiddenApi.getService().clearForcedDisplaySize(display.displayId)
+                                        }
+                                    }
+                                })
+
+                                setPositiveButton(android.R.string.ok, object : DialogInterface.OnClickListener {
+                                    override fun onClick(dialog: DialogInterface?, which: Int) {
+                                        myScope.launch {
+                                            hiddenApi.getService().setForcedDisplaySize(
+                                                display.displayId,
+                                                Integer.valueOf(width.text.toString()),
+                                                Integer.valueOf(height.text.toString()),
+                                            )
+                                        }
+                                    }
+                                })
+                            }.show()
+                        }
+                    }
                 }
             }
         )
