@@ -8,29 +8,12 @@
     <com.google.android.material.textfield.TextInputLayout
         android:focusable="false"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:layout_weight="1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/display_width"
-            android:hint="Width"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:focusable="false"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:paddingStart="8dp"
-        android:layout_weight="1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/display_height"
-            android:hint="Height"
+            android:id="@+id/display_density"
+            android:hint="Density"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 

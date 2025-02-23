@@ -16,20 +16,24 @@ import android.hardware.display.DisplayManager
 import android.hardware.display.DisplayManager.DisplayListener
 import android.os.Build
 import android.os.Bundle
+import android.os.UserHandle
 import android.util.Log
 import android.view.Display
 import android.view.View
+import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.blinksd.dispmgr.HiddenApiService.Companion.findRotationByMode
 
 @Suppress("deprecation")
 class MainActivity : AppCompatActivity() {
@@ -122,10 +126,10 @@ class MainActivity : AppCompatActivity() {
                             width.setText(point.x.toString())
                             height.setText(point.y.toString())
 
-                            AlertDialog.Builder(this@MainActivity).apply {
+                            MaterialAlertDialogBuilder(this@MainActivity).apply {
                                 setView(view)
 
-                                setNeutralButton("()", object : DialogInterface.OnClickListener {
+                                setNeutralButton("(↻)", object : DialogInterface.OnClickListener {
                                     override fun onClick(dialog: DialogInterface?, which: Int) {
                                         myScope.launch {
                                             hiddenApi.getService().clearForcedDisplaySize(display.displayId)
@@ -140,6 +144,60 @@ class MainActivity : AppCompatActivity() {
                                                 display.displayId,
                                                 Integer.valueOf(width.text.toString()),
                                                 Integer.valueOf(height.text.toString()),
+                                            )
+                                        }
+                                    }
+                                })
+                            }.show()
+                        }
+                    }
+                }
+            }
+        )
+
+        setOnClickListener(
+            R.id.density_container,
+            object : View.OnClickListener {
+                override fun onClick(v: View?) {
+                    val display = getSelectedDisplay()
+
+                    val view = layoutInflater.inflate(R.layout.density_dialog, null, false) as ViewGroup
+                    val densityView = view.findViewById<EditText>(R.id.display_density)
+
+                    myScope.launch {
+                        val density = hiddenApi.getService().getBaseDisplayDensity(display.displayId)
+                        val userId = try {
+                            val method1 = UserHandle::class.java.getDeclaredMethod("myUserId")
+                            method1.isAccessible = true
+                            method1.invoke(null) as Int
+                        } catch (e: Throwable) {
+                            throw e
+                        }
+
+                        withMainContext {
+                            densityView.setText(density.toString())
+
+                            MaterialAlertDialogBuilder(this@MainActivity).apply {
+                                setView(view)
+
+                                setNeutralButton("(↻)", object : DialogInterface.OnClickListener {
+                                    override fun onClick(dialog: DialogInterface?, which: Int) {
+                                        myScope.launch {
+                                            hiddenApi.getService().clearForcedDisplayDensityForUser(
+                                                display.displayId,
+                                                userId,
+                                            )
+                                        }
+                                    }
+                                })
+
+                                setPositiveButton(android.R.string.ok, object : DialogInterface.OnClickListener {
+                                    override fun onClick(dialog: DialogInterface?, which: Int) {
+                                        myScope.launch {
+                                            hiddenApi.getService().setForcedDisplayDensityForUser(
+                                                display.displayId,
+                                                Integer.valueOf(densityView.text.toString()),
+                                                userId,
                                             )
                                         }
                                     }
@@ -216,7 +274,9 @@ class MainActivity : AppCompatActivity() {
             try {
                 withMainContext {
                     val point = Point()
-                    hiddenApi.getService().getInitialDisplaySize(display.displayId, point)
+                    hiddenApi.getService().getBaseDisplaySize(display.displayId, point)
+                    val density1 = hiddenApi.getService().getBaseDisplayDensity(display.displayId)
+                    val density2 = hiddenApi.getService().getInitialDisplayDensity(display.displayId)
 
                     setText(
                         R.id.display_resolution_container,
@@ -227,13 +287,19 @@ class MainActivity : AppCompatActivity() {
                     setText(
                         R.id.display_rotation_container,
                         "Rotation",
-                        HiddenApiService.findRotationByMode(display.rotation)?.title ?: "Unknown (${display.rotation})"
+                        (findRotationByMode(display.rotation)?.title ?: "Unknown (${display.rotation})") + " - Press to rotate"
                     )
 
                     setText(
                         R.id.refresh_rate_container,
                         "Refresh rate",
                         "${display.refreshRate.toInt()}"
+                    )
+
+                    setText(
+                        R.id.density_container,
+                        "Density",
+                        "$density1 ($density2)"
                     )
                 }
             } catch (e: Throwable) {

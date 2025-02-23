@@ -49,12 +49,13 @@
             android:orientation="vertical">
 
             <com.google.android.material.textfield.TextInputLayout
-                android:focusable="false"
                 android:id="@+id/windowing_selector"
+                android:focusable="false"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingTop="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
                 android:paddingStart="?android:attr/listPreferredItemPaddingStart"
                 android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
                 android:hint="Windowing mode">
@@ -73,6 +74,10 @@
 
             <include
                 android:id="@+id/display_rotation_container"
+                layout="@android:layout/simple_list_item_2" />
+
+            <include
+                android:id="@+id/density_container"
                 layout="@android:layout/simple_list_item_2" />
 
             <include
