@@ -14,6 +14,7 @@ import android.content.res.Configuration
 import android.graphics.Point
 import android.hardware.display.DisplayManager
 import android.hardware.display.DisplayManager.DisplayListener
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Display
@@ -85,7 +86,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         myScope.launch {
-            val values = windowingValues.map { "${it.title} (${it.mode})" }.toTypedArray()
+            val values = windowingValues.filter {
+                it.mode != HiddenApiService.WINDOWING_MODE_MULTI_WINDOW ||
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+            }.map { "${it.title} (${it.mode})" }.toTypedArray()
             val selectedDisplay = getSelectedDisplay()
             val windowingMode = hiddenApi.getService().getWindowingMode(selectedDisplay.displayId)
             val idxWMode = windowingValues.indexOfFirst { it.mode == windowingMode }
