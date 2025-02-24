@@ -10,11 +10,17 @@
 package org.blinksd.dispmgr
 
 import android.graphics.Point
-import android.view.IWindowManager
+import android.hardware.display.DisplayManagerGlobal
+import android.os.Build
+import android.os.IBinder
+import android.view.DisplayInfo
+import android.view.SurfaceControl
 import android.view.WindowManagerGlobal
+import androidx.annotation.RequiresApi
 
 class HiddenApiServiceImpl : IHiddenApiService.Stub() {
-    private val iWindowManager: IWindowManager = WindowManagerGlobal.getWindowManagerService()
+    private val iWindowManager = WindowManagerGlobal.getWindowManagerService()
+    private val displayManager = DisplayManagerGlobal.getInstance()
 
     override fun getInitialDisplaySize(displayId: Int, size: Point) {
         iWindowManager.getInitialDisplaySize(displayId, size)
@@ -76,5 +82,39 @@ class HiddenApiServiceImpl : IHiddenApiService.Stub() {
 
     override fun setWindowingMode(displayId: Int, mode: Int) {
         iWindowManager.setWindowingMode(displayId, mode)
+    }
+
+    override fun getDisplayInfo(displayId: Int): DisplayInfo? {
+        return displayManager.getDisplayInfo(displayId)
+    }
+
+    override fun getDisplayIds(includeDisabled: Boolean): IntArray? {
+        return displayManager.getDisplayIds(includeDisabled)
+    }
+
+    override fun enableConnectedDisplay(displayId: Int) {
+        return displayManager.disableConnectedDisplay(displayId)
+    }
+
+    override fun disableConnectedDisplay(displayId: Int) {
+        return displayManager.enableConnectedDisplay(displayId)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
+    override fun requestDisplayPower(displayId: Int, state: Int): Boolean {
+        return displayManager.requestDisplayPower(displayId, state)
+    }
+
+    override fun getPhysicalDisplayToken(physicalDisplayId: Long): IBinder? {
+        val method = SurfaceControl::class.java.getDeclaredMethod("setDisplayPowerMode", Long::class.java)
+        method.isAccessible = true
+        return method.invoke(null, physicalDisplayId) as IBinder?
+    }
+
+    override fun setDisplayPowerMode(displayToken: IBinder, mode: Int) {
+        SurfaceControl::class.java.getDeclaredMethod("setDisplayPowerMode", IBinder::class.java, Int::class.java).also {
+            it.isAccessible = true
+            it.invoke(null, displayToken, mode)
+        }
     }
 }

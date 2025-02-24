@@ -22,11 +22,13 @@ import android.view.Display
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
+import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.CoroutineScope
@@ -41,6 +43,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var hiddenApi: HiddenApiService
     private lateinit var displaySpinner: TextInputLayout
     private lateinit var windowingSpinner: TextInputLayout
+    private lateinit var stateSwitch: MaterialSwitch
     private val myScope = CoroutineScope(Dispatchers.IO)
     private val windowingValues = HiddenApiService.WindowingMode.entries.toTypedArray()
 
@@ -62,6 +65,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    val onSwitchListener = object : CompoundButton.OnCheckedChangeListener {
+        override fun onCheckedChanged(
+            buttonView: CompoundButton?,
+            isChecked: Boolean
+        ) {
+            val selectedDisplay = getSelectedDisplay()
+
+            myScope.launch {
+                hiddenApi.setPowerState(
+                    selectedDisplay.displayId,
+                    isChecked
+                )
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -71,6 +90,7 @@ class MainActivity : AppCompatActivity() {
 
         displaySpinner = findViewById<TextInputLayout>(R.id.display_selector)
         windowingSpinner = findViewById<TextInputLayout>(R.id.windowing_selector)
+        stateSwitch = findViewById<MaterialSwitch>(R.id.screen_state_switch)
 
         displayManager = getSystemService(DISPLAY_SERVICE) as DisplayManager
         displays = displayManager.displays
@@ -97,7 +117,12 @@ class MainActivity : AppCompatActivity() {
             val windowingMode = hiddenApi.getService().getWindowingMode(selectedDisplay.displayId)
             val idxWMode = windowingValues.indexOfFirst { it.mode == windowingMode }
 
+            val screenIsOn = hiddenApi.getPowerState(selectedDisplay.displayId)
+
             withMainContext {
+                stateSwitch.isChecked = screenIsOn
+                stateSwitch.setOnCheckedChangeListener(onSwitchListener)
+
                 val autoCTVW = (windowingSpinner.editText as MaterialAutoCompleteTextView)
                 autoCTVW.setSimpleItems(values)
                 autoCTVW.setText(values[idxWMode], false)
@@ -158,13 +183,13 @@ class MainActivity : AppCompatActivity() {
             R.id.density_container,
             object : View.OnClickListener {
                 override fun onClick(v: View?) {
-                    val display = getSelectedDisplay()
+                    val displayId = getSelectedDisplayId()
 
                     val view = layoutInflater.inflate(R.layout.density_dialog, null, false) as ViewGroup
                     val densityView = view.findViewById<EditText>(R.id.display_density)
 
                     myScope.launch {
-                        val density = hiddenApi.getService().getBaseDisplayDensity(display.displayId)
+                        val density = hiddenApi.getService().getBaseDisplayDensity(displayId)
                         val userId = try {
                             val method1 = UserHandle::class.java.getDeclaredMethod("myUserId")
                             method1.isAccessible = true
@@ -183,7 +208,7 @@ class MainActivity : AppCompatActivity() {
                                     override fun onClick(dialog: DialogInterface?, which: Int) {
                                         myScope.launch {
                                             hiddenApi.getService().clearForcedDisplayDensityForUser(
-                                                display.displayId,
+                                                displayId,
                                                 userId,
                                             )
                                         }
@@ -194,7 +219,7 @@ class MainActivity : AppCompatActivity() {
                                     override fun onClick(dialog: DialogInterface?, which: Int) {
                                         myScope.launch {
                                             hiddenApi.getService().setForcedDisplayDensityForUser(
-                                                display.displayId,
+                                                displayId,
                                                 Integer.valueOf(densityView.text.toString()),
                                                 userId,
                                             )
@@ -230,8 +255,8 @@ class MainActivity : AppCompatActivity() {
                 val displayIdx = displays.indexOfFirst { it.displayId == displayId }
                 displays[displayIdx] = displayManager.getDisplay(displayId)
 
-                val currentDisplay = getSelectedDisplay()
-                if (currentDisplay.displayId == displayId) {
+                val currentDisplayId = getSelectedDisplayId()
+                if (currentDisplayId == displayId) {
                     launchScope(displays[displayIdx])
                 }
             }
@@ -264,6 +289,8 @@ class MainActivity : AppCompatActivity() {
         return displays[getDisplayNames().indexOfFirst { it == autoCTV.text.toString() }]
     }
 
+    private fun getSelectedDisplayId(): Int = getSelectedDisplay().displayId
+
     private fun setOnClickListener(resId: Int, listener: View.OnClickListener) {
         findViewById<View?>(resId)?.setOnClickListener(listener)
     }
@@ -272,15 +299,15 @@ class MainActivity : AppCompatActivity() {
         myScope.launch {
             try {
                 withMainContext {
-                    val point = Point()
-                    hiddenApi.getService().getBaseDisplaySize(display.displayId, point)
-                    val density1 = hiddenApi.getService().getBaseDisplayDensity(display.displayId)
-                    val density2 = hiddenApi.getService().getInitialDisplayDensity(display.displayId)
+                    val point1 = Point()
+                    val point2 = Point()
+                    hiddenApi.getService().getBaseDisplaySize(display.displayId, point1)
+                    hiddenApi.getService().getBaseDisplaySize(display.displayId, point2)
 
                     setText(
                         R.id.display_resolution_container,
                         "Resolution",
-                        "${point.x}x${point.y}"
+                        "${point1.x}x${point1.y}" + (if (point1.x == point2.x && point1.y == point2.y) "" else " (Default: ${point2.x}x${point2.y})")
                     )
 
                     setText(
@@ -295,11 +322,21 @@ class MainActivity : AppCompatActivity() {
                         "${display.refreshRate.toInt()}"
                     )
 
+                    val density1 = hiddenApi.getService().getBaseDisplayDensity(display.displayId)
+                    val density2 = hiddenApi.getService().getInitialDisplayDensity(display.displayId)
+
                     setText(
                         R.id.density_container,
                         "Density",
-                        "$density1 ($density2)"
+                        if (density1 == density2) { density1.toString() } else { "$density1 (Default: $density2)" }
                     )
+
+                    val isEnabled = hiddenApi.getPowerState(display.displayId)
+                    if (isEnabled != stateSwitch.isChecked) {
+                        stateSwitch.setOnCheckedChangeListener(null)
+                        stateSwitch.isChecked = isEnabled
+                        stateSwitch.setOnCheckedChangeListener(onSwitchListener)
+                    }
                 }
             } catch (e: Throwable) {
                 Log.d(MainActivity::class.simpleName, e.message, e)

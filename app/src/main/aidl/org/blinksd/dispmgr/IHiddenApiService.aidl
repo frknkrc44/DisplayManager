@@ -10,6 +10,8 @@
 package org.blinksd.dispmgr;
 
 import android.graphics.Point;
+import android.os.IBinder;
+import android.view.DisplayInfo;
 
 interface IHiddenApiService {
     void getInitialDisplaySize(int displayId, out Point size);
@@ -39,4 +41,18 @@ interface IHiddenApiService {
     int getWindowingMode(int displayId);
 
     void setWindowingMode(int displayId, int mode);
+
+    DisplayInfo getDisplayInfo(int displayId);
+
+    int[] getDisplayIds(boolean includeDisabled);
+
+    void enableConnectedDisplay(int displayId);
+
+    void disableConnectedDisplay(int displayId);
+
+    boolean requestDisplayPower(int displayId, int state);
+
+    IBinder getPhysicalDisplayToken(long physicalDisplayId);
+
+    void setDisplayPowerMode(IBinder displayToken, int mode);
 }
