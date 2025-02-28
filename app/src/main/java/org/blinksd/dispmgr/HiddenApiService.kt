@@ -124,29 +124,18 @@ class HiddenApiService(private val context: Context) {
     fun log(str: String, throwable: Throwable? = null) = Log.d(javaClass.simpleName, str, throwable)
 
     enum class RotationMode(val mode: Int, val title: String) {
-        rotation0(0, "0°"),
-        rotation90(1, "90°"),
-        rotation180(2, "180°"),
-        rotation270(3, "270°"),
+        Rotation0(0, "0°"),
+        Rotation90(1, "90°"),
+        Rotation180(2, "180°"),
+        Rotation270(3, "270°"),
     }
 
     enum class WindowingMode(val mode: Int, val title: String) {
-        undefined(WINDOWING_MODE_UNDEFINED, "Undefined"),
-        fullscreen(WINDOWING_MODE_FULLSCREEN, "Full screen"),
-        pinned(WINDOWING_MODE_PINNED, "Pinned"),
-        freeform(WINDOWING_MODE_FREEFORM, "Freeform"),
-        multiWindow(WINDOWING_MODE_MULTI_WINDOW, "Multi window");
-
-        override fun toString() = "$title ($mode)"
-    }
-
-    enum class DisplayState(val mode: Int, val title: String) {
-        stateOff(STATE_OFF, "Off"),
-        stateOn(STATE_ON, "On"),
-        stateDoze(STATE_DOZE, "Doze"),
-        stateDozeSuspend(STATE_DOZE_SUSPEND, "Doze suspend"),
-        stateVr(STATE_VR, "VR (Virtual Reality)"),
-        stateOnSuspend(STATE_ON_SUSPEND, "On suspend");
+        Undefined(WINDOWING_MODE_UNDEFINED, "Undefined"),
+        FullScreen(WINDOWING_MODE_FULLSCREEN, "Full screen"),
+        Pinned(WINDOWING_MODE_PINNED, "Pinned"),
+        Freeform(WINDOWING_MODE_FREEFORM, "Freeform"),
+        MultiWindow(WINDOWING_MODE_MULTI_WINDOW, "Multi window");
 
         override fun toString() = "$title ($mode)"
     }

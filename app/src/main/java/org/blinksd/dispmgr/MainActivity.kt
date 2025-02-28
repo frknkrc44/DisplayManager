@@ -34,6 +34,7 @@ import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.blinksd.dispmgr.DensityHelper.Companion.calculateSmallestWidth
 import org.blinksd.dispmgr.HiddenApiService.Companion.findRotationByMode
 
 @Suppress("deprecation")
@@ -329,6 +330,15 @@ class MainActivity : AppCompatActivity() {
                         R.id.density_container,
                         "Density",
                         if (density1 == density2) { density1.toString() } else { "$density1 (Default: $density2)" }
+                    )
+
+                    val sw1 = calculateSmallestWidth(point1, density1).toInt()
+                    val sw2 = calculateSmallestWidth(point2, density2).toInt()
+
+                    setText(
+                        R.id.smallest_width_container,
+                        "Smallest width",
+                        if (sw1 == sw2) { sw1.toString() } else { "$sw1 (Default: $sw2)" }
                     )
 
                     val isEnabled = hiddenApi.getPowerState(display.displayId)

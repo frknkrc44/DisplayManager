@@ -90,6 +90,10 @@
                 layout="@android:layout/simple_list_item_2" />
 
             <include
+                android:id="@+id/smallest_width_container"
+                layout="@android:layout/simple_list_item_2" />
+
+            <include
                 android:id="@+id/refresh_rate_container"
                 layout="@android:layout/simple_list_item_2" />
 
