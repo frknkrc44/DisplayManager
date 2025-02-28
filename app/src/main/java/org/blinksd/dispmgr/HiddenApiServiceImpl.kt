@@ -105,11 +105,10 @@ class HiddenApiServiceImpl : IHiddenApiService.Stub() {
         return displayManager.requestDisplayPower(displayId, state)
     }
 
-    override fun getPhysicalDisplayToken(physicalDisplayId: Long): IBinder? {
-        val method = SurfaceControl::class.java.getDeclaredMethod("setDisplayPowerMode", Long::class.java)
-        method.isAccessible = true
-        return method.invoke(null, physicalDisplayId) as IBinder?
-    }
+    override fun getPhysicalDisplayToken(physicalDisplayId: Long) =
+        SurfaceControl::class.java.getDeclaredMethod("setDisplayPowerMode", Long::class.java).also {
+            it.isAccessible = true
+        }.invoke(physicalDisplayId) as IBinder?
 
     override fun setDisplayPowerMode(displayToken: IBinder, mode: Int) {
         SurfaceControl::class.java.getDeclaredMethod("setDisplayPowerMode", IBinder::class.java, Int::class.java).also {

@@ -113,12 +113,11 @@ class MainActivity : AppCompatActivity() {
             val values = windowingValues.filter {
                 it.mode != HiddenApiService.WINDOWING_MODE_MULTI_WINDOW ||
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
-            }.map { "${it.title} (${it.mode})" }.toTypedArray()
+            }.map { it.toString() }.toTypedArray()
             val selectedDisplay = getSelectedDisplay()
+            val screenIsOn = hiddenApi.getPowerState(selectedDisplay.displayId)
             val windowingMode = hiddenApi.getService().getWindowingMode(selectedDisplay.displayId)
             val idxWMode = windowingValues.indexOfFirst { it.mode == windowingMode }
-
-            val screenIsOn = hiddenApi.getPowerState(selectedDisplay.displayId)
 
             withMainContext {
                 stateSwitch.isChecked = screenIsOn
