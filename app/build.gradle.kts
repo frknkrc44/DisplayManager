@@ -1,3 +1,4 @@
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -67,4 +68,12 @@ dependencies {
     compileOnly(project(":hidden"))
 
     implementation(libs.restrictionbypass)
+}
+
+android.applicationVariants.all {
+    outputs.all {
+        (this as BaseVariantOutputImpl).apply {
+            outputFileName = "${rootProject.name.replace(" ", "_")}-v${versionName}-${buildType.name}.apk"
+        }
+    }
 }
