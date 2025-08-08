@@ -127,6 +127,7 @@ class MainActivity : AppCompatActivity() {
             R.id.display_resolution_container
         ) {
             val display = getSelectedDisplay()
+            val currentMode = display.mode
 
             val view = layoutInflater.inflate(R.layout.display_size_dialog, null, false)
             val width = view.findViewById<EditText>(R.id.display_width)
@@ -147,7 +148,7 @@ class MainActivity : AppCompatActivity() {
                     )
                 )
 
-                if (mode.equals(display.mode)) {
+                if (mode.equals(currentMode)) {
                     modeChecked = true
                     modeSelector.check(mode.modeId)
                 }
@@ -160,15 +161,15 @@ class MainActivity : AppCompatActivity() {
                 )
             )
 
-            if (!modeChecked) {
-                modeSelector.check(-999)
-            }
-
             myScope.launch {
                 val point = Point()
                 hiddenApi.getService().getBaseDisplaySize(display.displayId, point)
 
                 withMainContext {
+                    if (!modeChecked || point.x != currentMode.physicalWidth || point.y != currentMode.physicalHeight) {
+                        modeSelector.check(-999)
+                    }
+
                     width.setText(point.x.toString())
                     height.setText(point.y.toString())
 
