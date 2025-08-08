@@ -13,6 +13,7 @@ import android.graphics.Point
 import android.hardware.display.DisplayManagerGlobal
 import android.os.Build
 import android.os.IBinder
+import android.view.Display
 import android.view.DisplayInfo
 import android.view.SurfaceControl
 import android.view.WindowManagerGlobal
@@ -39,6 +40,15 @@ class HiddenApiServiceImpl : IHiddenApiService.Stub() {
     override fun clearForcedDisplaySize(displayId: Int) {
         iWindowManager.clearForcedDisplaySize(displayId)
     }
+
+    override fun getUserPreferredDisplayMode(
+        displayId: Int
+    ): Display.Mode? = displayManager.getUserPreferredDisplayMode(displayId)
+
+    override fun setUserPreferredDisplayMode(
+        displayId: Int,
+        mode: Display.Mode?
+    ) = displayManager.setUserPreferredDisplayMode(displayId, mode)
 
     override fun getInitialDisplayDensity(displayId: Int): Int {
         return iWindowManager.getInitialDisplayDensity(displayId)

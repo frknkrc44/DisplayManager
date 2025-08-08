@@ -11,6 +11,7 @@ package org.blinksd.dispmgr;
 
 import android.graphics.Point;
 import android.os.IBinder;
+import android.view.Display.Mode;
 import android.view.DisplayInfo;
 
 interface IHiddenApiService {
@@ -19,6 +20,10 @@ interface IHiddenApiService {
     void getBaseDisplaySize(int displayId, out Point size);
 
     void setForcedDisplaySize(int displayId, int width, int height);
+
+    Mode getUserPreferredDisplayMode(int displayId);
+
+    void setUserPreferredDisplayMode(int displayId, in Mode mode);
 
     void clearForcedDisplaySize(int displayId);
 

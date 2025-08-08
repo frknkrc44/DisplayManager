@@ -9,7 +9,7 @@
 
 package org.blinksd.dispmgr
 
-import android.content.DialogInterface
+import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.graphics.Point
 import android.hardware.display.DisplayManager
@@ -24,7 +24,10 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.CompoundButton
 import android.widget.EditText
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.TextView
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -36,6 +39,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.blinksd.dispmgr.DensityHelper.Companion.calculateSmallestWidth
 import org.blinksd.dispmgr.HiddenApiService.Companion.findRotationByMode
+import org.lsposed.hiddenapibypass.HiddenApiBypass
+import org.lsposed.hiddenapibypass.LSPass
 
 @Suppress("deprecation")
 class MainActivity : AppCompatActivity() {
@@ -48,13 +53,8 @@ class MainActivity : AppCompatActivity() {
     private val myScope = CoroutineScope(Dispatchers.IO)
     private val windowingValues = HiddenApiService.WindowingMode.entries.toTypedArray()
 
-    val onWindowingModeSelectedListener = object : AdapterView.OnItemClickListener {
-        override fun onItemClick(
-            parent: AdapterView<*>?,
-            view: View?,
-            position: Int,
-            id: Long
-        ) {
+    val onWindowingModeSelectedListener =
+        AdapterView.OnItemClickListener { parent, view, position, id ->
             val selectedDisplay = getSelectedDisplay()
 
             myScope.launch {
@@ -64,34 +64,32 @@ class MainActivity : AppCompatActivity() {
 
             launchScope(selectedDisplay)
         }
-    }
 
-    val onSwitchListener = object : CompoundButton.OnCheckedChangeListener {
-        override fun onCheckedChanged(
-            buttonView: CompoundButton?,
-            isChecked: Boolean
-        ) {
-            val selectedDisplay = getSelectedDisplay()
+    val onSwitchListener = CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
+        val selectedDisplay = getSelectedDisplay()
 
-            myScope.launch {
-                hiddenApi.setPowerState(
-                    selectedDisplay.displayId,
-                    isChecked
-                )
-            }
+        myScope.launch {
+            hiddenApi.setPowerState(
+                selectedDisplay.displayId,
+                isChecked
+            )
         }
     }
 
+    @SuppressLint("ResourceType", "SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        enableEdgeToEdge()
+        LSPass.setHiddenApiExemptions("L")
+
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
 
-        displaySpinner = findViewById<TextInputLayout>(R.id.display_selector)
-        windowingSpinner = findViewById<TextInputLayout>(R.id.windowing_selector)
-        stateSwitch = findViewById<MaterialSwitch>(R.id.screen_state_switch)
+        displaySpinner = findViewById(R.id.display_selector)
+        windowingSpinner = findViewById(R.id.windowing_selector)
+        stateSwitch = findViewById(R.id.screen_state_switch)
 
         displayManager = getSystemService(DISPLAY_SERVICE) as DisplayManager
         displays = displayManager.displays
@@ -100,14 +98,7 @@ class MainActivity : AppCompatActivity() {
         setAdapter()
 
         (displaySpinner.getEditText() as MaterialAutoCompleteTextView)
-            .onItemClickListener = object : AdapterView.OnItemClickListener {
-            override fun onItemClick(
-                parent: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long
-            ) = launchScope(displays[position])
-        }
+            .onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id -> launchScope(displays[position]) }
 
         myScope.launch {
             val values = windowingValues.filter {
@@ -133,122 +124,138 @@ class MainActivity : AppCompatActivity() {
         launchScope(getSelectedDisplay())
 
         setOnClickListener(
-            R.id.display_resolution_container,
-            object : View.OnClickListener {
-                override fun onClick(v: View?) {
-                    val display = getSelectedDisplay()
+            R.id.display_resolution_container
+        ) {
+            val display = getSelectedDisplay()
 
-                    val view = layoutInflater.inflate(R.layout.display_size_dialog, null, false)
-                    val width = view.findViewById<EditText>(R.id.display_width)
-                    val height = view.findViewById<EditText>(R.id.display_height)
+            val view = layoutInflater.inflate(R.layout.display_size_dialog, null, false)
+            val width = view.findViewById<EditText>(R.id.display_width)
+            val height = view.findViewById<EditText>(R.id.display_height)
+            val modes = display.supportedModes.toList()
+            val modeSelector = view.findViewById<RadioGroup>(R.id.mode_selector)
+            modeSelector.setOnCheckedChangeListener { _, checkedId ->
+                width.isEnabled = checkedId == -999
+                height.isEnabled = checkedId == -999
+            }
 
-                    myScope.launch {
-                        val point = Point()
-                        hiddenApi.getService().getInitialDisplaySize(display.displayId, point)
+            for (mode in modes) {
+                val radioButton = RadioButton(this)
+                radioButton.layoutParams = RadioGroup.LayoutParams(-1, -2)
+                radioButton.id = mode.modeId
+                radioButton.text = "${mode.physicalWidth}x${mode.physicalHeight}@${mode.refreshRate}"
+                modeSelector.addView(radioButton)
+            }
 
-                        withMainContext {
-                            width.setText(point.x.toString())
-                            height.setText(point.y.toString())
+            val radioButton = RadioButton(this)
+            radioButton.layoutParams = RadioGroup.LayoutParams(-1, -2)
+            radioButton.text = "Custom"
+            radioButton.id = -999
+            modeSelector.addView(radioButton)
 
-                            MaterialAlertDialogBuilder(this@MainActivity).apply {
-                                setView(view)
+            modeSelector.check(modes.first().modeId)
 
-                                setNeutralButton("(↻)", object : DialogInterface.OnClickListener {
-                                    override fun onClick(dialog: DialogInterface?, which: Int) {
-                                        myScope.launch {
-                                            hiddenApi.getService().clearForcedDisplaySize(display.displayId)
-                                        }
-                                    }
-                                })
+            myScope.launch {
+                val point = Point()
+                hiddenApi.getService().getBaseDisplaySize(display.displayId, point)
 
-                                setPositiveButton(android.R.string.ok, object : DialogInterface.OnClickListener {
-                                    override fun onClick(dialog: DialogInterface?, which: Int) {
-                                        myScope.launch {
-                                            hiddenApi.getService().setForcedDisplaySize(
-                                                display.displayId,
-                                                Integer.valueOf(width.text.toString()),
-                                                Integer.valueOf(height.text.toString()),
-                                            )
-                                        }
-                                    }
-                                })
-                            }.show()
+                withMainContext {
+                    width.setText(point.x.toString())
+                    height.setText(point.y.toString())
+
+                    MaterialAlertDialogBuilder(this@MainActivity).apply {
+                        setView(view)
+
+                        setNeutralButton("(↻)") { dialog, which ->
+                            myScope.launch {
+                                hiddenApi.getService().clearForcedDisplaySize(display.displayId)
+                            }
                         }
-                    }
+
+                        setPositiveButton(
+                            android.R.string.ok
+                        ) { dialog, which ->
+                            myScope.launch {
+                                if (modeSelector.checkedRadioButtonId == -999) {
+                                    hiddenApi.getService().setForcedDisplaySize(
+                                        display.displayId,
+                                        Integer.valueOf(width.text.toString()),
+                                        Integer.valueOf(height.text.toString()),
+                                    )
+                                } else {
+                                    hiddenApi.getService().setUserPreferredDisplayMode(
+                                        display.displayId,
+                                        modes.first { it.modeId == modeSelector.checkedRadioButtonId }
+                                    )
+                                }
+                            }
+                        }
+                    }.show()
                 }
             }
-        )
+        }
 
         setOnClickListener(
-            R.id.density_container,
-            object : View.OnClickListener {
-                override fun onClick(v: View?) {
-                    val displayId = getSelectedDisplayId()
+            R.id.density_container
+        ) {
+            val displayId = getSelectedDisplayId()
 
-                    val view = layoutInflater.inflate(R.layout.density_dialog, null, false) as ViewGroup
-                    val densityView = view.findViewById<EditText>(R.id.display_density)
+            val view = layoutInflater.inflate(R.layout.density_dialog, null, false) as ViewGroup
+            val densityView = view.findViewById<EditText>(R.id.display_density)
 
-                    myScope.launch {
-                        val density = hiddenApi.getService().getBaseDisplayDensity(displayId)
-                        val userId = try {
-                            val method1 = UserHandle::class.java.getDeclaredMethod("myUserId")
-                            method1.isAccessible = true
-                            method1.invoke(null) as Int
-                        } catch (e: Throwable) {
-                            throw e
+            myScope.launch {
+                val density = hiddenApi.getService().getBaseDisplayDensity(displayId)
+                val userId = try {
+                    val method1 = UserHandle::class.java.getDeclaredMethod("myUserId")
+                    method1.isAccessible = true
+                    method1.invoke(null) as Int
+                } catch (e: Throwable) {
+                    throw e
+                }
+
+                withMainContext {
+                    densityView.setText(density.toString())
+
+                    MaterialAlertDialogBuilder(this@MainActivity).apply {
+                        setView(view)
+
+                        setNeutralButton("(↻)") { dialog, which ->
+                            myScope.launch {
+                                hiddenApi.getService().clearForcedDisplayDensityForUser(
+                                    displayId,
+                                    userId,
+                                )
+                            }
                         }
 
-                        withMainContext {
-                            densityView.setText(density.toString())
-
-                            MaterialAlertDialogBuilder(this@MainActivity).apply {
-                                setView(view)
-
-                                setNeutralButton("(↻)", object : DialogInterface.OnClickListener {
-                                    override fun onClick(dialog: DialogInterface?, which: Int) {
-                                        myScope.launch {
-                                            hiddenApi.getService().clearForcedDisplayDensityForUser(
-                                                displayId,
-                                                userId,
-                                            )
-                                        }
-                                    }
-                                })
-
-                                setPositiveButton(android.R.string.ok, object : DialogInterface.OnClickListener {
-                                    override fun onClick(dialog: DialogInterface?, which: Int) {
-                                        myScope.launch {
-                                            hiddenApi.getService().setForcedDisplayDensityForUser(
-                                                displayId,
-                                                Integer.valueOf(densityView.text.toString()),
-                                                userId,
-                                            )
-                                        }
-                                    }
-                                })
-                            }.show()
+                        setPositiveButton(
+                            android.R.string.ok
+                        ) { dialog, which ->
+                            myScope.launch {
+                                hiddenApi.getService().setForcedDisplayDensityForUser(
+                                    displayId,
+                                    Integer.valueOf(densityView.text.toString()),
+                                    userId,
+                                )
+                            }
                         }
-                    }
+                    }.show()
                 }
             }
-        )
+        }
 
         setOnClickListener(
-            R.id.display_rotation_container,
-            object : View.OnClickListener {
-                override fun onClick(v: View?) {
-                    val display = getSelectedDisplay()
+            R.id.display_rotation_container
+        ) {
+            val display = getSelectedDisplay()
 
-                    myScope.launch {
-                        hiddenApi.getService().freezeDisplayRotation(
-                            display.displayId,
-                            (display.rotation + 1) % 4,
-                            "android"
-                        )
-                    }
-                }
+            myScope.launch {
+                hiddenApi.getService().freezeDisplayRotation(
+                    display.displayId,
+                    (display.rotation + 1) % 4,
+                    "android"
+                )
             }
-        )
+        }
 
         displayManager.registerDisplayListener(object : DisplayListener {
             override fun onDisplayChanged(displayId: Int) {
@@ -265,7 +272,7 @@ class MainActivity : AppCompatActivity() {
                 displays = displayManager.displays
                 setAdapter()
             }
-        }, findViewById<View?>(android.R.id.content).handler)
+        }, findViewById<View?>(android.R.id.content)!!.handler)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -302,7 +309,7 @@ class MainActivity : AppCompatActivity() {
                     val point1 = Point()
                     val point2 = Point()
                     hiddenApi.getService().getBaseDisplaySize(display.displayId, point1)
-                    hiddenApi.getService().getBaseDisplaySize(display.displayId, point2)
+                    hiddenApi.getService().getInitialDisplaySize(display.displayId, point2)
 
                     setText(
                         R.id.display_resolution_container,

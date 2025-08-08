@@ -1,5 +1,6 @@
 package android.hardware.display;
 
+import android.view.Display;
 import android.view.DisplayInfo;
 
 public class DisplayManagerGlobal {
@@ -24,6 +25,14 @@ public class DisplayManagerGlobal {
     }
 
     public boolean requestDisplayPower(int displayId, int state) {
+        throw new RuntimeException("Stub!");
+    }
+
+    public void setUserPreferredDisplayMode(int displayId, Display.Mode mode) {
+        throw new RuntimeException("Stub!");
+    }
+
+    public Display.Mode getUserPreferredDisplayMode(int displayId) {
         throw new RuntimeException("Stub!");
     }
 }

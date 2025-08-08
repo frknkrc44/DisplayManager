@@ -1,39 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal"
+    android:orientation="vertical"
     android:padding="16dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:focusable="false"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:layout_weight="1"
+    <RadioGroup
+        android:id="@+id/mode_selector"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content" />
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/display_width"
-            android:hint="Width"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:focusable="false"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:paddingStart="8dp"
-        android:layout_weight="1"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:baselineAligned="false">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/display_height"
-            android:hint="Height"
+        <com.google.android.material.textfield.TextInputLayout
+            android:focusable="false"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_weight="1"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content">
 
-    </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/display_width"
+                android:enabled="false"
+                android:hint="Width"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:focusable="false"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:paddingStart="8dp"
+            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/display_height"
+                android:enabled="false"
+                android:hint="Height"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </LinearLayout>
 
 </LinearLayout>
