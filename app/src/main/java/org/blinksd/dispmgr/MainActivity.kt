@@ -144,6 +144,10 @@ class MainActivity : AppCompatActivity() {
                 radioButton.id = mode.modeId
                 radioButton.text = "${mode.physicalWidth}x${mode.physicalHeight}@${mode.refreshRate}"
                 modeSelector.addView(radioButton)
+
+                if (mode.equals(display.mode)) {
+                    modeSelector.check(mode.modeId)
+                }
             }
 
             val radioButton = RadioButton(this)
@@ -151,8 +155,6 @@ class MainActivity : AppCompatActivity() {
             radioButton.text = "Custom"
             radioButton.id = -999
             modeSelector.addView(radioButton)
-
-            modeSelector.check(modes.first().modeId)
 
             myScope.launch {
                 val point = Point()
