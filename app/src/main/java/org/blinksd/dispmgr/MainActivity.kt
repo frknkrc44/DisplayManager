@@ -139,22 +139,24 @@ class MainActivity : AppCompatActivity() {
             }
 
             for (mode in modes) {
-                val radioButton = RadioButton(this)
-                radioButton.layoutParams = RadioGroup.LayoutParams(-1, -2)
-                radioButton.id = mode.modeId
-                radioButton.text = "${mode.physicalWidth}x${mode.physicalHeight}@${mode.refreshRate}"
-                modeSelector.addView(radioButton)
+                modeSelector.addView(
+                    createDisplayModeSelectorItem(
+                        "${mode.physicalWidth}x${mode.physicalHeight}@${mode.refreshRate}",
+                        mode.modeId
+                    )
+                )
 
                 if (mode.equals(display.mode)) {
                     modeSelector.check(mode.modeId)
                 }
             }
 
-            val radioButton = RadioButton(this)
-            radioButton.layoutParams = RadioGroup.LayoutParams(-1, -2)
-            radioButton.text = "Custom"
-            radioButton.id = -999
-            modeSelector.addView(radioButton)
+            modeSelector.addView(
+                createDisplayModeSelectorItem(
+                    getString(R.string.custom),
+                    -999
+                )
+            )
 
             myScope.launch {
                 val point = Point()
@@ -281,6 +283,14 @@ class MainActivity : AppCompatActivity() {
         super.onConfigurationChanged(newConfig)
 
         launchScope(getSelectedDisplay())
+    }
+
+    fun createDisplayModeSelectorItem(text: String, modeId: Int): RadioButton {
+        val radioButton = RadioButton(this)
+        radioButton.layoutParams = RadioGroup.LayoutParams(-1, -2)
+        radioButton.text = text
+        radioButton.id = modeId
+        return radioButton
     }
 
     fun setAdapter() {

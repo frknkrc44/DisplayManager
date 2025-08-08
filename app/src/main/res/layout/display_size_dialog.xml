@@ -30,7 +30,7 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/display_width"
                     android:enabled="false"
-                    android:hint="Width"
+                    android:hint="@string/width"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
@@ -47,7 +47,7 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/display_height"
                     android:enabled="false"
-                    android:hint="Height"
+                    android:hint="@string/height"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 

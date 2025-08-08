@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Display Manager</string>
+    <string name="selected_display">Selected display</string>
+    <string name="turn_on_screen">Turn on screen</string>
+    <string name="windowing_mode">Windowing mode</string>
+    <string name="width">Width</string>
+    <string name="height">Height</string>
+    <string name="custom">Custom</string>
 </resources>
