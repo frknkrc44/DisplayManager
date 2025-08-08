@@ -39,7 +39,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.blinksd.dispmgr.DensityHelper.Companion.calculateSmallestWidth
 import org.blinksd.dispmgr.HiddenApiService.Companion.findRotationByMode
-import org.lsposed.hiddenapibypass.HiddenApiBypass
 import org.lsposed.hiddenapibypass.LSPass
 
 @Suppress("deprecation")
@@ -52,6 +51,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var stateSwitch: MaterialSwitch
     private val myScope = CoroutineScope(Dispatchers.IO)
     private val windowingValues = HiddenApiService.WindowingMode.entries.toTypedArray()
+
+    private val displayModeCustom = -999
 
     val onWindowingModeSelectedListener =
         AdapterView.OnItemClickListener { parent, view, position, id ->
@@ -135,8 +136,8 @@ class MainActivity : AppCompatActivity() {
             val modes = display.supportedModes.toList()
             val modeSelector = view.findViewById<RadioGroup>(R.id.mode_selector)
             modeSelector.setOnCheckedChangeListener { _, checkedId ->
-                width.isEnabled = checkedId == -999
-                height.isEnabled = checkedId == -999
+                width.isEnabled = checkedId == displayModeCustom
+                height.isEnabled = checkedId == displayModeCustom
             }
 
             var modeChecked = false
@@ -157,7 +158,7 @@ class MainActivity : AppCompatActivity() {
             modeSelector.addView(
                 createDisplayModeSelectorItem(
                     getString(R.string.custom),
-                    -999
+                    displayModeCustom
                 )
             )
 
@@ -167,7 +168,7 @@ class MainActivity : AppCompatActivity() {
 
                 withMainContext {
                     if (!modeChecked || point.x != currentMode.physicalWidth || point.y != currentMode.physicalHeight) {
-                        modeSelector.check(-999)
+                        modeSelector.check(displayModeCustom)
                     }
 
                     width.setText(point.x.toString())
@@ -186,7 +187,7 @@ class MainActivity : AppCompatActivity() {
                             android.R.string.ok
                         ) { dialog, which ->
                             myScope.launch {
-                                if (modeSelector.checkedRadioButtonId == -999) {
+                                if (modeSelector.checkedRadioButtonId == displayModeCustom) {
                                     hiddenApi.getService().setForcedDisplaySize(
                                         display.displayId,
                                         Integer.valueOf(width.text.toString()),
