@@ -138,6 +138,7 @@ class MainActivity : AppCompatActivity() {
                 height.isEnabled = checkedId == -999
             }
 
+            var modeChecked = false
             for (mode in modes) {
                 modeSelector.addView(
                     createDisplayModeSelectorItem(
@@ -147,6 +148,7 @@ class MainActivity : AppCompatActivity() {
                 )
 
                 if (mode.equals(display.mode)) {
+                    modeChecked = true
                     modeSelector.check(mode.modeId)
                 }
             }
@@ -157,6 +159,10 @@ class MainActivity : AppCompatActivity() {
                     -999
                 )
             )
+
+            if (!modeChecked) {
+                modeSelector.check(-999)
+            }
 
             myScope.launch {
                 val point = Point()
