@@ -37,7 +37,7 @@ import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.blinksd.dispmgr.DensityHelper.Companion.calculateSmallestWidth
+import org.blinksd.dispmgr.DensityHelper.Companion.calculateSmallestWidthInt
 import org.blinksd.dispmgr.HiddenApiService.Companion.findRotationByMode
 import org.lsposed.hiddenapibypass.LSPass
 
@@ -359,7 +359,10 @@ class MainActivity : AppCompatActivity() {
                         setText(
                             R.id.display_resolution_container,
                             "Resolution",
-                            "${point1.x}x${point1.y}" + (if (point1.x == point2.x && point1.y == point2.y) "" else " (Default: ${point2.x}x${point2.y})")
+                            "${point1.x}x${point1.y}" + (
+                                    if (point1.x == point2.x && point1.y == point2.y) ""
+                                    else " (Default: ${point2.x}x${point2.y})"
+                            )
                         )
 
                         setText(
@@ -388,8 +391,8 @@ class MainActivity : AppCompatActivity() {
                             }
                         )
 
-                        val sw1 = calculateSmallestWidth(point1, density1).toInt()
-                        val sw2 = calculateSmallestWidth(point2, density2).toInt()
+                        val sw1 = calculateSmallestWidthInt(point1, density1)
+                        val sw2 = calculateSmallestWidthInt(point2, density2)
 
                         setText(
                             R.id.smallest_width_container,

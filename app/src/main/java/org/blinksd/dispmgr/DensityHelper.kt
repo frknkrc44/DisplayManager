@@ -17,6 +17,8 @@ class DensityHelper private constructor() {
     companion object {
         fun calculateSmallestWidth(size: Point, densityDpi: Int) = dpiFromPx(min(size.x, size.y), densityDpi)
 
+        fun calculateSmallestWidthInt(size: Point, densityDpi: Int) = calculateSmallestWidth(size, densityDpi).toInt()
+
         fun dpiFromPx(size: Int, densityDpi: Int): Float {
             val densityRatio = densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT
             return size / densityRatio
