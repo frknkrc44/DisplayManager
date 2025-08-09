@@ -269,17 +269,19 @@ class MainActivity : AppCompatActivity() {
                 android.R.string.ok
             ) { dialog, which ->
                 myScope.launch {
-                    if (modeSelector.checkedRadioButtonId == displayModeCustom) {
-                        hiddenApi.getService().setForcedDisplaySize(
-                            displayId,
-                            Integer.valueOf(width.text.toString()),
-                            Integer.valueOf(height.text.toString()),
-                        )
-                    } else {
-                        hiddenApi.getService().setUserPreferredDisplayMode(
-                            displayId,
-                            modes.first { it.modeId == modeSelector.checkedRadioButtonId }
-                        )
+                    hiddenApi.getService().apply {
+                        if (modeSelector.checkedRadioButtonId == displayModeCustom) {
+                            setForcedDisplaySize(
+                                displayId,
+                                Integer.valueOf(width.text.toString()),
+                                Integer.valueOf(height.text.toString()),
+                            )
+                        } else {
+                            setUserPreferredDisplayMode(
+                                displayId,
+                                modes.first { it.modeId == modeSelector.checkedRadioButtonId }
+                            )
+                        }
                     }
                 }
             }
@@ -347,53 +349,64 @@ class MainActivity : AppCompatActivity() {
     private fun launchScope(display: Display) {
         myScope.launch {
             try {
-                withMainContext {
-                    val point1 = Point()
-                    val point2 = Point()
-                    hiddenApi.getService().getBaseDisplaySize(display.displayId, point1)
-                    hiddenApi.getService().getInitialDisplaySize(display.displayId, point2)
+                hiddenApi.getService().apply {
+                    withMainContext {
+                        val point1 = Point()
+                        val point2 = Point()
+                        getBaseDisplaySize(display.displayId, point1)
+                        getInitialDisplaySize(display.displayId, point2)
 
-                    setText(
-                        R.id.display_resolution_container,
-                        "Resolution",
-                        "${point1.x}x${point1.y}" + (if (point1.x == point2.x && point1.y == point2.y) "" else " (Default: ${point2.x}x${point2.y})")
-                    )
+                        setText(
+                            R.id.display_resolution_container,
+                            "Resolution",
+                            "${point1.x}x${point1.y}" + (if (point1.x == point2.x && point1.y == point2.y) "" else " (Default: ${point2.x}x${point2.y})")
+                        )
 
-                    setText(
-                        R.id.display_rotation_container,
-                        "Rotation",
-                        (findRotationByMode(display.rotation)?.title ?: "Unknown (${display.rotation})") + " - Press to rotate"
-                    )
+                        setText(
+                            R.id.display_rotation_container,
+                            "Rotation",
+                            (findRotationByMode(display.rotation)?.title
+                                ?: "Unknown (${display.rotation})") + " - Press to rotate"
+                        )
 
-                    setText(
-                        R.id.refresh_rate_container,
-                        "Refresh rate",
-                        "${display.refreshRate.toInt()}"
-                    )
+                        setText(
+                            R.id.refresh_rate_container,
+                            "Refresh rate",
+                            "${display.refreshRate.toInt()}"
+                        )
 
-                    val density1 = hiddenApi.getService().getBaseDisplayDensity(display.displayId)
-                    val density2 = hiddenApi.getService().getInitialDisplayDensity(display.displayId)
+                        val density1 = getBaseDisplayDensity(display.displayId)
+                        val density2 = getInitialDisplayDensity(display.displayId)
 
-                    setText(
-                        R.id.density_container,
-                        "Density",
-                        if (density1 == density2) { density1.toString() } else { "$density1 (Default: $density2)" }
-                    )
+                        setText(
+                            R.id.density_container,
+                            "Density",
+                            if (density1 == density2) {
+                                density1.toString()
+                            } else {
+                                "$density1 (Default: $density2)"
+                            }
+                        )
 
-                    val sw1 = calculateSmallestWidth(point1, density1).toInt()
-                    val sw2 = calculateSmallestWidth(point2, density2).toInt()
+                        val sw1 = calculateSmallestWidth(point1, density1).toInt()
+                        val sw2 = calculateSmallestWidth(point2, density2).toInt()
 
-                    setText(
-                        R.id.smallest_width_container,
-                        "Smallest width",
-                        if (sw1 == sw2) { sw1.toString() } else { "$sw1 (Default: $sw2)" }
-                    )
+                        setText(
+                            R.id.smallest_width_container,
+                            "Smallest width",
+                            if (sw1 == sw2) {
+                                sw1.toString()
+                            } else {
+                                "$sw1 (Default: $sw2)"
+                            }
+                        )
 
-                    val isEnabled = hiddenApi.getPowerState(display.displayId)
-                    if (isEnabled != stateSwitch.isChecked) {
-                        stateSwitch.setOnCheckedChangeListener(null)
-                        stateSwitch.isChecked = isEnabled
-                        stateSwitch.setOnCheckedChangeListener(onSwitchListener)
+                        val isEnabled = hiddenApi.getPowerState(display.displayId)
+                        if (isEnabled != stateSwitch.isChecked) {
+                            stateSwitch.setOnCheckedChangeListener(null)
+                            stateSwitch.isChecked = isEnabled
+                            stateSwitch.setOnCheckedChangeListener(onSwitchListener)
+                        }
                     }
                 }
             } catch (e: Throwable) {
