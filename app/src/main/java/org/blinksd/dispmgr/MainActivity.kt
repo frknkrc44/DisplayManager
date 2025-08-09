@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("ResourceType", "SetTextI18n")
+    @SuppressLint("ResourceType", "SetTextI18n", "InflateParams")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -174,42 +174,7 @@ class MainActivity : AppCompatActivity() {
                     width.setText(point.x.toString())
                     height.setText(point.y.toString())
 
-                    MaterialAlertDialogBuilder(this@MainActivity).apply {
-                        setView(view)
-
-                        setNeutralButton("(↻)") { dialog, which ->
-                            myScope.launch {
-                                hiddenApi.getService().apply {
-                                    if (modeSelector.checkedRadioButtonId == displayModeCustom) {
-                                        clearForcedDisplaySize(display.displayId)
-                                    } else {
-                                        val system =
-                                            getSystemPreferredDisplayMode(display.displayId)
-                                        setUserPreferredDisplayMode(display.displayId, system)
-                                    }
-                                }
-                            }
-                        }
-
-                        setPositiveButton(
-                            android.R.string.ok
-                        ) { dialog, which ->
-                            myScope.launch {
-                                if (modeSelector.checkedRadioButtonId == displayModeCustom) {
-                                    hiddenApi.getService().setForcedDisplaySize(
-                                        display.displayId,
-                                        Integer.valueOf(width.text.toString()),
-                                        Integer.valueOf(height.text.toString()),
-                                    )
-                                } else {
-                                    hiddenApi.getService().setUserPreferredDisplayMode(
-                                        display.displayId,
-                                        modes.first { it.modeId == modeSelector.checkedRadioButtonId }
-                                    )
-                                }
-                            }
-                        }
-                    }.show()
+                    launchDisplayModeSelectorDialog(view, display.displayId, modes)
                 }
             }
         }
@@ -235,30 +200,7 @@ class MainActivity : AppCompatActivity() {
                 withMainContext {
                     densityView.setText(density.toString())
 
-                    MaterialAlertDialogBuilder(this@MainActivity).apply {
-                        setView(view)
-
-                        setNeutralButton("(↻)") { dialog, which ->
-                            myScope.launch {
-                                hiddenApi.getService().clearForcedDisplayDensityForUser(
-                                    displayId,
-                                    userId,
-                                )
-                            }
-                        }
-
-                        setPositiveButton(
-                            android.R.string.ok
-                        ) { dialog, which ->
-                            myScope.launch {
-                                hiddenApi.getService().setForcedDisplayDensityForUser(
-                                    displayId,
-                                    Integer.valueOf(densityView.text.toString()),
-                                    userId,
-                                )
-                            }
-                        }
-                    }.show()
+                    launchDensitySelectorDialog(view, displayId, userId)
                 }
             }
         }
@@ -299,6 +241,78 @@ class MainActivity : AppCompatActivity() {
         super.onConfigurationChanged(newConfig)
 
         launchScope(getSelectedDisplay())
+    }
+
+    fun launchDisplayModeSelectorDialog(view: View, displayId: Int, modes: List<Display.Mode>) {
+        MaterialAlertDialogBuilder(this@MainActivity).apply {
+            setView(view)
+
+            val width = view.findViewById<EditText>(R.id.display_width)
+            val height = view.findViewById<EditText>(R.id.display_height)
+            val modeSelector = view.findViewById<RadioGroup>(R.id.mode_selector)
+
+            setNeutralButton("(↻)") { dialog, which ->
+                myScope.launch {
+                    hiddenApi.getService().apply {
+                        if (modeSelector.checkedRadioButtonId == displayModeCustom) {
+                            clearForcedDisplaySize(displayId)
+                        } else {
+                            val system =
+                                getSystemPreferredDisplayMode(displayId)
+                            setUserPreferredDisplayMode(displayId, system)
+                        }
+                    }
+                }
+            }
+
+            setPositiveButton(
+                android.R.string.ok
+            ) { dialog, which ->
+                myScope.launch {
+                    if (modeSelector.checkedRadioButtonId == displayModeCustom) {
+                        hiddenApi.getService().setForcedDisplaySize(
+                            displayId,
+                            Integer.valueOf(width.text.toString()),
+                            Integer.valueOf(height.text.toString()),
+                        )
+                    } else {
+                        hiddenApi.getService().setUserPreferredDisplayMode(
+                            displayId,
+                            modes.first { it.modeId == modeSelector.checkedRadioButtonId }
+                        )
+                    }
+                }
+            }
+        }.show()
+    }
+
+    fun launchDensitySelectorDialog(view: View, displayId: Int, userId: Int) {
+        MaterialAlertDialogBuilder(this@MainActivity).apply {
+            setView(view)
+
+            val densityView = view.findViewById<EditText>(R.id.display_density)
+
+            setNeutralButton("(↻)") { dialog, which ->
+                myScope.launch {
+                    hiddenApi.getService().clearForcedDisplayDensityForUser(
+                        displayId,
+                        userId,
+                    )
+                }
+            }
+
+            setPositiveButton(
+                android.R.string.ok
+            ) { dialog, which ->
+                myScope.launch {
+                    hiddenApi.getService().setForcedDisplayDensityForUser(
+                        displayId,
+                        Integer.valueOf(densityView.text.toString()),
+                        userId,
+                    )
+                }
+            }
+        }.show()
     }
 
     fun createDisplayModeSelectorItem(text: String, modeId: Int): RadioButton {
