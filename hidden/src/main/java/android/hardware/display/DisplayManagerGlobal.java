@@ -35,4 +35,8 @@ public class DisplayManagerGlobal {
     public Display.Mode getUserPreferredDisplayMode(int displayId) {
         throw new RuntimeException("Stub!");
     }
+
+    public Display.Mode getSystemPreferredDisplayMode(int displayId) {
+        throw new RuntimeException("Stub!");
+    }
 }

@@ -41,6 +41,10 @@ class HiddenApiServiceImpl : IHiddenApiService.Stub() {
         iWindowManager.clearForcedDisplaySize(displayId)
     }
 
+    override fun getSystemPreferredDisplayMode(
+        displayId: Int
+    ): Display.Mode? = displayManager.getSystemPreferredDisplayMode(displayId)
+
     override fun getUserPreferredDisplayMode(
         displayId: Int
     ): Display.Mode? = displayManager.getUserPreferredDisplayMode(displayId)

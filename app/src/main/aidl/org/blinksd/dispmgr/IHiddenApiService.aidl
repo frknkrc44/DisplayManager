@@ -21,6 +21,8 @@ interface IHiddenApiService {
 
     void setForcedDisplaySize(int displayId, int width, int height);
 
+    Mode getSystemPreferredDisplayMode(int displayId);
+
     Mode getUserPreferredDisplayMode(int displayId);
 
     void setUserPreferredDisplayMode(int displayId, in Mode mode);

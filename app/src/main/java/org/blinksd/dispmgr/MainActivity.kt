@@ -179,7 +179,15 @@ class MainActivity : AppCompatActivity() {
 
                         setNeutralButton("(↻)") { dialog, which ->
                             myScope.launch {
-                                hiddenApi.getService().clearForcedDisplaySize(display.displayId)
+                                hiddenApi.getService().apply {
+                                    if (modeSelector.checkedRadioButtonId == displayModeCustom) {
+                                        clearForcedDisplaySize(display.displayId)
+                                    } else {
+                                        val system =
+                                            getSystemPreferredDisplayMode(display.displayId)
+                                        setUserPreferredDisplayMode(display.displayId, system)
+                                    }
+                                }
                             }
                         }
 
