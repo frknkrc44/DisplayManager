@@ -21,9 +21,9 @@ android {
     }
 
     defaultConfig {
-        applicationId = "org.blinksd.dispmgr"
+        applicationId = namespace
         minSdk = 29
-        targetSdk = 36
+        targetSdk = compileSdk
         versionCode = 2
         versionName = "1.1"
     }
