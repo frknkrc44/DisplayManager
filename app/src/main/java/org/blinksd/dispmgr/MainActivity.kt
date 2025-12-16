@@ -233,6 +233,10 @@ class MainActivity : AppCompatActivity() {
             override fun onDisplayRemoved(displayId: Int) {
                 displays = displayManager.displays
                 setAdapter()
+
+                val currentDisplayId = getSelectedDisplayId()
+                val displayIdx = displays.indexOfFirst { it.displayId == currentDisplayId }
+                launchScope(displays[displayIdx])
             }
         }, findViewById<View?>(android.R.id.content)!!.handler)
     }

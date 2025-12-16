@@ -17,7 +17,6 @@ import android.os.Build
 import android.os.IBinder
 import android.os.RemoteException
 import android.util.Log
-import android.view.SurfaceControl
 import com.topjohnwu.superuser.ipc.RootService
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Mutex
